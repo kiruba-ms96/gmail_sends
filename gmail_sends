@@ -1,0 +1,90 @@
+from fastapi import FastAPI
+from pydantic import BaseModel
+import smtplib
+from email.message import EmailMessage  # create a properly formatted email with subject, body, to/from addresses, etc.
+import socket   # 	Check network connection to email server 
+
+app = FastAPI()
+
+SMTP_HOST = "smtp.gmail.com"
+SMTP_PORT = 587
+SMTP_USERNAME = "kirubams142@gmail.com" 
+SMTP_PASSWORD = "mavakzcrxtuyrgav"  
+
+EMAIL_SUBJECT = "Welcome to BLACK B COMPANY - Python Developer Position"
+EMAIL_BODY = """
+
+From:
+KIRUBA
+📧 [kiruba.email@example.com](mailto:kiruba.email@example.com)
+📱 +91-XXXXXXXXXX
+💻 \[LinkedIn Profile or Portfolio URL]
+To: 
+**Hiring Manager**
+Black B Company
+📧 [hiring@blackb.com](mailto:hiring@blackb.com)
+
+**Subject:** Application for Python Developer Position at Black B
+
+---
+
+**Dear Hiring Manager,**
+
+I hope this message finds you well.  
+My name is **KIRUBA**, and I am writing to express my interest in the **Python Developer** position at **Black B**. Please find my resume attached for your kind consideration.
+
+With a strong background in Python development and data engineering, I am confident that my skills align well with the role requirements. I have hands-on experience in backend development, database integration, and building file converter applications. I am eager to contribute to your team’s success with commitment and technical expertise.
+
+Additionally, I have attached my **professional logo** to reflect my dedication to quality and consistent branding.
+
+Thank you for your time and consideration. I would be honored to discuss my application further in an interview.
+
+Warm regards,
+**KIRUBA**
+📧 [kiruba.email@example.com](mailto:kiruba.email@example.com)
+📱 +91-XXXXXXXXXX
+💻 \[LinkedIn Profile or Portfolio URL]
+
+
+"""
+
+class EmailRequest(BaseModel):
+    gmail: str
+
+
+def send_email(to_email: str):
+    msg = EmailMessage()
+    msg["Subject"] = EMAIL_SUBJECT
+    msg["From"] = SMTP_USERNAME
+    msg["To"] = to_email
+    msg.set_content(EMAIL_BODY)
+
+    server = None
+    try:
+        try:
+            socket.gethostbyname(SMTP_HOST)
+        except socket.gaierror:
+            raise Exception("DNS resolution failed: Cannot resolve SMTP server address.")
+
+        server = smtplib.SMTP(SMTP_HOST, SMTP_PORT)
+        server.starttls()   # TLS (Transport Layer Security). starttls(), email and password will be sent in plain text — very dangerous!everything is encrypted, 
+        server.login(SMTP_USERNAME, SMTP_PASSWORD)
+        server.send_message(msg)
+    except Exception as e:
+        print("Error while sending email:", e)
+        raise Exception(f"Failed to send email: {e}")
+    finally:
+        if server:
+            server.quit()
+            
+          
+@app.post("/send-mails")
+def send_email_to_user(data: EmailRequest):
+    try:
+        send_email(data.gmail)
+        return {"message": f" Email successfully sent to {data.gmail}"}
+    except Exception as e:
+        return {"error": str(e)}
+    finally:
+        print("Email sending process completed.")
+        
